@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const Product = require("../model/productschema");
+const { listnotMessage, deleteCartMessage, addCartMessage } = require("../model/constant");
 
 const getProduct = (req, res) => {
   Product.find()
@@ -24,30 +25,55 @@ const createProduct = (req, res) => {
   newproduct
     .save()
     .then((newproduct) => {
-      res.send("New Product Has been Added Into Your DataBase.");
+      res.send(`${addCartMessage}`);
     })
     .catch((err) => {
       res.send(err);
     });
 };
 const deleteProduct = (req, res) => {
-   let deleteItem={}
-   let id=req.params._id;
-     console.log("d",id);
-  Product.deleteOne({_id:id})
-    .exec()
-    .then((payload) => {
-      res.send("the product is delete") 
-      console.log("the result:",payload);
+  let id = req.params.id;
+  Product.findById(id).exec()
+  .then((payload)=>{
+    if(!payload){
+      console.log("w");
+      return res.send(`${listnotMessage}`)
+    }
+    else{
+      Product.deleteOne({_id:id}).exec()
+      .then((item)=>{
+        res.send(`${deleteCartMessage}`)
+      }).catch((err)=>{
+        res.send(err)
+      })
+    }
+  }
+  ).catch((err)=>{
+    res.send(err)
+  });
+};
+const updateProduct = (req, res) => {
+  let id = req.params.id;
+  console.log(id);
+
+  Product.findByIdAndUpdate(id, req.body, { new: true }) // { new: true } returns the updated document
+    .then((updatedProduct) => {
+      if (!updatedProduct) {
+        return res.send(`${listnotMessage} not updated`); // Assuming listnotMessage is defined elsewhere
+      } else {
+        return res.send("The product has been updated successfully");
+      }
     })
     .catch((err) => {
-      console.log(err);
+      console.error(err);
+      return res.send("Error updating product");
     });
-   
 };
+
 
 module.exports = {
   getProduct,
   createProduct,
   deleteProduct,
+  updateProduct,
 };
